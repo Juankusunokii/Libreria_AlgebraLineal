@@ -25,5 +25,3 @@ ventas_altas = df[df['venta'] > 10000]
 
 # Guardar el resultado en CSVs separados por partición
 ventas_altas.to_csv('resultados/ventas_altas_*.csv', index=False)
-
-# Tip: puedes usar df.persist() si vas a hacer varias operaciones sobre el mismo conjunto
