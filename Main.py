@@ -1,27 +1,32 @@
-import dask.dataframe as dd
+import dask.array as da
 
-# Leer múltiples archivos CSV (puedes usar comodines)
-df = dd.read_csv('data/ventas_*.csv')
+# Crear dos matrices grandes de 4000x4000 divididas en bloques de 1000x1000
+A = da.random.random((4000, 4000), chunks=(1000, 1000))
+B = da.random.random((4000, 4000), chunks=(1000, 1000))
 
-# Mostrar esquema de datos (sin cargar todo)
-print("Columnas:", df.columns)
-print("Tipos de datos:\n", df.dtypes)
+# Operaciones básicas
+suma = A + B
+resta = A - B
+producto_elemento = A * B
 
-# Limpiar datos: eliminar filas con valores nulos
-df = df.dropna()
+# Producto matricial
+producto_matriz = A @ B
 
-# Convertir columna de fechas si es necesario
-df['fecha'] = dd.to_datetime(df['fecha'])
+# Transposición
+transpuesta_A = A.T
 
-# Agregar: total de ventas por mes
-df['mes'] = df['fecha'].dt.to_period('M')
-ventas_mensuales = df.groupby('mes')['venta'].sum().compute()
+# Estadísticas
+media_A = A.mean()
+max_B = B.max()
+norma_A = da.linalg.norm(A)
 
-print("Ventas por mes:")
-print(ventas_mensuales)
+# Ejecutar y mostrar los resultados
+print("Media de A:", media_A.compute())
+print("Máximo de B:", max_B.compute())
+print("Norma de A:", norma_A.compute())
 
-# Filtrar ventas mayores a cierto umbral y guardar resultado
-ventas_altas = df[df['venta'] > 10000]
-
-# Guardar el resultado en CSVs separados por partición
-ventas_altas.to_csv('resultados/ventas_altas_*.csv', index=False)
+# Cuidado con matrices pequeñas si necesitas determinante o inversa:
+# Ejemplo con una matriz 3x3
+M = da.from_array([[1, 2, 3], [0, 1, 4], [5, 6, 0]], chunks=(3, 3))
+determinante = da.linalg.det(M)
+print("Determinante de M:", determinante.compute())/ventas_altas_*.csv', index=False)
