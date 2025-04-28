@@ -1,32 +1,63 @@
-import dask.array as da
+import dask.bag as db
+import string
 
-# Crear dos matrices grandes de 4000x4000 divididas en bloques de 1000x1000
-A = da.random.random((4000, 4000), chunks=(1000, 1000))
-B = da.random.random((4000, 4000), chunks=(1000, 1000))
+# Lista de palabras comunes a ignorar
+STOPWORDS = {"el", "la", "de", "y", "en", "que", "a", "los", "las", "un", "una"}
 
-# Operaciones básicas
-suma = A + B
-resta = A - B
-producto_elemento = A * B
+def leer_archivo(path):
+    """Lee el archivo de texto en un Dask Bag."""
+    return db.read_text(path)
 
-# Producto matricial
-producto_matriz = A @ B
+def limpiar_linea(linea):
+    """Limpia una línea de texto: elimina puntuación y pasa a minúsculas."""
+    translator = str.maketrans('', '', string.punctuation)
+    return linea.translate(translator).lower()
 
-# Transposición
-transpuesta_A = A.T
+def contar_palabras(bag):
+    """Cuenta las palabras en el Dask Bag."""
+    palabras = bag.map(limpiar_linea).flat_map(lambda linea: linea.split())
+    return palabras.frequencies()
 
-# Estadísticas
-media_A = A.mean()
-max_B = B.max()
-norma_A = da.linalg.norm(A)
+def filtrar_stopwords(frecuencias, stopwords):
+    """Filtra palabras que estén en la lista de stopwords."""
+    return frecuencias.filter(lambda x: x[0] not in stopwords)
 
-# Ejecutar y mostrar los resultados
-print("Media de A:", media_A.compute())
-print("Máximo de B:", max_B.compute())
-print("Norma de A:", norma_A.compute())
+def mostrar_top(frecuencias, n=10):
+    """Muestra las top n palabras más comunes."""
+    top = frecuencias.topk(n, key=lambda x: x[1])
+    print("\nTop palabras más comunes:\n")
+    for palabra, cantidad in top.compute():
+        print(f"{palabra}: {cantidad}")
 
-# Cuidado con matrices pequeñas si necesitas determinante o inversa:
-# Ejemplo con una matriz 3x3
-M = da.from_array([[1, 2, 3], [0, 1, 4], [5, 6, 0]], chunks=(3, 3))
-determinante = da.linalg.det(M)
-print("Determinante de M:", determinante.compute())/ventas_altas_*.csv', index=False)
+def agregar_stopwords(palabras_extra):
+    """Agrega palabras nuevas a las stopwords."""
+    nuevas = {p.strip().lower() for p in palabras_extra.split(",")}
+    return STOPWORDS.union(nuevas)
+
+# --- Programa Principal ---
+
+if __name__ == "__main__":
+    print("=== Contador de Palabras ===\n")
+
+    archivo = input("Ingrese el nombre del archivo de texto a analizar: ").strip()
+    try:
+        bag = leer_archivo(archivo)
+    except Exception as e:
+        print(f"Error al abrir el archivo: {e}")
+        exit()
+
+    agregar = input("\n¿Desea agregar palabras adicionales a ignorar? (s/n): ").lower()
+    stopwords_activas = STOPWORDS
+    if agregar == "s":
+        palabras_extra = input("Ingrese palabras separadas por comas (ej: esto,eso,aquel): ")
+        stopwords_activas = agregar_stopwords(palabras_extra)
+
+    try:
+        n = int(input("\n¿Cuántas palabras desea mostrar en el ranking?: "))
+    except ValueError:
+        print("Número inválido, mostrando top 10 por defecto.")
+        n = 10
+
+    frecuencias = contar_palabras(bag)
+    frecuencias_filtradas = filtrar_stopwords(frecuencias, stopwords_activas)
+    mostrar_top(frecuencias_filtradas, n=n)
