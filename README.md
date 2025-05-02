@@ -4,7 +4,7 @@ Este es un proyecto hecho en python cuyo proposito es ser un contador de palabra
 # ¿Qué es Dask?
 Dask es una biblioteca de Python diseñada para la computación paralela y el procesamiento de grandes volúmenes de datos que no caben en memoria. Ofrece estructuras de datos similares a pandas, NumPy y scikit-learn, pero divide las operaciones en pequeñas tareas que pueden ejecutarse de forma distribuida en múltiples hilos, procesos o incluso máquinas.
 
-#Funciones
+# Funciones
 -Contador de palabras dentro del texto de manera rapida y eficaz
 -Omision de palabras muy presentes en los textos como pueden ser "el , la , de , y , etc ".
 ( el usuario puede añadir mas palabras a ser omisas)
